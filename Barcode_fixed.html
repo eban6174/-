@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>통합 바코드 도구</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #e0f8fc;
+    }
+    header {
+      background: #00aaff;
+      padding: 20px;
+      color: white;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background: #c8f0fc;
+      padding: 10px;
+      gap: 10px;
+    }
+    nav button {
+      background: #0095e5;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .panel {
+      background: white;
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .panel h2 {
+      text-align: center;
+      color: #007acc;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .button-group {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .button-group button {
+      background: #007acc;
+      color: white;
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .barcode-output, .text-preview {
+      text-align: center;
+      margin-top: 30px;
+      min-height: 150px;
+      padding: 30px 0;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tot-border {
+      border: 2px solid black;
+      font-weight: bold;
+      padding: 4px 8px;
+      
+      margin-bottom: 10px;
+    }
+    .barcode-top-text {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .text-settings label { font-weight: normal; }
+    .text-settings input { width: 100%; }
+    .batch-item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      position: relative;
+    }
+    .batch-item button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      .print-area, .print-area * { visibility: visible; }
+      .print-area {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        page-break-after: always;
+        text-align: center;
+        padding: 50px;
+      }
+      nav, header, .panel h2, .button-group, label, input, textarea, .text-settings {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>통합 바코드 도구</header>
+  <nav>
+    <button onclick="showView('single')">단일 바코드</button>
+    <button onclick="showView('batch')">배치 바코드</button>
+    <button onclick="showView('text')">글씨 인쇄</button>
+  </nav>
+
+  <div class="panel" id="single-view" style="display:none;">
+    <h2>단일 바코드 생성기</h2>
+    <label for="singleTopText">상단 텍스트:</label>
+    <input type="text" id="singleTopText" oninput="updateSingleBarcode()">
+    <label for="singleCode">바코드 코드:</label>
+    <input type="text" id="singleCode" oninput="updateSingleBarcode()">
+    <div class="button-group">
+      <button onclick="window.print()">인쇄하기</button>
+    </div>
+    <div class="barcode-output" id="singleOutput"></div>
+  </div>
+
+  <div class="panel" id="batch-view" style="display:none;">
+    <h2>배치 바코드 생성기</h2>
+    <div id="batchItems"></div>
+    <div class="button-group">
+      <button onclick="addBatchItem()">항목 추가</button>
+      <button onclick="window.print()">인쇄하기</button>
+    </div>
+    <div id="batchOutput"></div>
+  </div>
+
+  <div class="panel" id="text-view" style="display:none;">
+    <h2>글씨 인쇄 도구</h2>
+    <label for="printText">출력할 문장:</label>
+    <textarea id="printText" rows="4" oninput="updatePreview()"></textarea>
+    <div class="text-settings">
+      <label for="fontSize">글자 크기: <span id="fontSizeValue">24</span>px</label>
+      <input type="range" id="fontSize" min="10" max="72" value="24" oninput="updatePreview()">
+      <label for="lineHeight">줄 간격: <span id="lineHeightValue">1.5</span></label>
+      <input type="range" id="lineHeight" min="1" max="3" step="0.1" value="1.5" oninput="updatePreview()">
+      <label for="textAlign">정렬:</label>
+      <select id="textAlign" onchange="updatePreview()">
+        <option value="center">가운데</option>
+        <option value="left">왼쪽</option>
+        <option value="right">오른쪽</option>
+      </select>
+    </div>
+    <div class="button-group">
+      <button onclick="window.print()">인쇄하기</button>
+    </div>
+    <div class="text-preview print-area" id="previewArea"></div>
+  </div>
+
+  <script>
+    function showView(viewId) {
+      const views = ['single', 'batch', 'text'];
+      views.forEach(function(id) {
+        document.getElementById(id + '-view').style.display = (id === viewId) ? 'block' : 'none';
+      });
+    }
+
+    function updateSingleBarcode() {
+      const topText = document.getElementById("singleTopText").value;
+      const code = document.getElementById("singleCode").value;
+      const output = document.getElementById("singleOutput");
+      output.innerHTML = "";
+
+      const top = document.createElement("div");
+      if (code.includes("182-RCRT1")) {
+        top.textContent = "토트 바코드";
+        top.className = "tot-border barcode-top-text";
+      } else if (topText) {
+        top.textContent = topText;
+        top.className = "barcode-top-text";
+      }
+
+      const container = document.createElement("div");
+      container.className = "print-area";
+      container.appendChild(top);
+
+      if (code) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        JsBarcode(svg, code, { displayValue: true });
+        container.appendChild(svg);
+      }
+
+      output.appendChild(container);
+    }
+
+    function addBatchItem() {
+      const container = document.getElementById("batchItems");
+      const wrapper = document.createElement("div");
+      wrapper.className = "batch-item";
+
+      const topInput = document.createElement("input");
+      topInput.type = "text";
+      topInput.placeholder = "상단 텍스트";
+      topInput.oninput = generateBatchOutput;
+
+      const codeInput = document.createElement("input");
+      codeInput.type = "text";
+      codeInput.placeholder = "바코드 코드";
+      codeInput.oninput = generateBatchOutput;
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "삭제";
+      deleteBtn.onclick = () => {
+        container.removeChild(wrapper);
+        generateBatchOutput();
+      };
+
+      wrapper.appendChild(deleteBtn);
+      wrapper.appendChild(topInput);
+      wrapper.appendChild(codeInput);
+      container.appendChild(wrapper);
+
+      generateBatchOutput();
+    }
+
+    function generateBatchOutput() {
+      const container = document.getElementById("batchItems");
+      const output = document.getElementById("batchOutput");
+      output.innerHTML = "";
+
+      Array.from(container.children).forEach(wrapper => {
+        const inputs = wrapper.querySelectorAll("input");
+        const topText = inputs[0].value;
+        const code = inputs[1].value;
+
+        if (code) {
+          const page = document.createElement("div");
+          page.className = "print-area";
+
+          const top = document.createElement("div");
+          if (code.includes("182-RCRT1")) {
+            top.textContent = "토트 바코드";
+            top.className = "tot-border barcode-top-text";
+          } else if (topText) {
+            top.textContent = topText;
+            top.className = "barcode-top-text";
+          }
+
+          page.appendChild(top);
+
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          JsBarcode(svg, code, { displayValue: true });
+          page.appendChild(svg);
+
+          output.appendChild(page);
+        }
+      });
+    }
+
+    function updatePreview() {
+      const text = document.getElementById("printText").value;
+      const fontSize = document.getElementById("fontSize").value;
+      const lineHeight = document.getElementById("lineHeight").value;
+      const textAlign = document.getElementById("textAlign").value;
+      document.getElementById("fontSizeValue").textContent = fontSize;
+      document.getElementById("lineHeightValue").textContent = lineHeight;
+      const preview = document.getElementById("previewArea");
+      preview.innerText = text;
+      preview.style.fontSize = fontSize + "px";
+      preview.style.lineHeight = lineHeight;
+      preview.style.textAlign = textAlign;
+      preview.style.whiteSpace = "pre-wrap";
+    }
+
+    updatePreview();
+    showView('text');
+  </script>
+</body>
+</html>

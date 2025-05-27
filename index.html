@@ -1,193 +1,297 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>바코드 생성기</title>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-    <style>
-        /* 기본 스타일 (웹 페이지에 표시될 스타일) */
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>바코드 생성기 및 글씨 인쇄</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #e0f7fa;
+      color: #333;
+    }
 
-        #barcodeWrapper {
-            display: inline-block;
-            text-align: center;
-            margin-top: 30px;
-        }
+    nav {
+      background-color: #039be5;
+      padding: 12px 0;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-        #barcode {
-            margin-top: 20px;
-        }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
 
-        #barcodeNumber {
-            font-size: 24px;
-            margin-top: 10px;
-        }
+    nav a:hover {
+      text-decoration: underline;
+    }
 
-        #customText {
-            padding: 10px;
-            margin: 10px;
-            font-size: 16px;
-            width: 300px;
-        }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 
-        #barcodeData {
-            padding: 10px;
-            margin: 10px;
-            font-size: 16px;
-            width: 300px;
-        }
+    h1 {
+      text-align: center;
+      color: #007ac1;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
 
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            margin: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-        }
+    .hidden {
+      display: none;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
 
-        /* 인쇄 스타일 (웹 페이지에서 인쇄시 적용) */
-        @media print {
-            /* 웹 페이지의 나머지 내용 숨기기 */
-            body {
-                visibility: hidden; /* 웹 페이지의 모든 내용 숨김 */
-            }
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
 
-            /* 바코드 관련 내용만 보이게 설정 */
-            #barcodeWrapper {
-                visibility: visible;
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%); /* 수직 중앙 정렬 */
-                text-align: center;
-                width: 100%;
-                padding: 10mm;
-            }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
 
-            #barcode {
-                width: 50%; /* 바코드 크기 조정 (50%로 줄임) */
-                height: auto;
-            }
+    .control-group {
+      flex: 1 1 200px;
+      min-width: 150px;
+    }
 
-            #barcodeNumber {
-                font-size: 48px; /* 바코드 아래 숫자 크기 증가 */
-                margin-top: 10px;
-                color: black; /* 글자 색을 검정으로 설정 */
-            }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
 
-            #customTextDisplay {
-                font-size: 60px; /* 바코드 위 텍스트 크기 증가 */
-                margin-top: 20px;
-                font-weight: bold;
-                color: black; /* 글자 색을 검정으로 설정 */
-            }
+    button:hover {
+      background-color: #0277bd;
+    }
 
-            /* 인쇄할 때 여백 조정 */
-            @page {
-                margin: 0;
-            }
+    #barcodeWrapper {
+      margin-top: 30px;
+      text-align: center;
+    }
 
-            /* 페이지 상단의 여백 제거 */
-            html, body {
-                margin: 0;
-                padding: 0;
-            }
-        }
-    </style>
+    #customTextDisplay {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    #barcodeNumber {
+      margin-top: 8px;
+      font-size: 18px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @media print {
+      body, html {
+        margin: 0;
+        padding: 0;
+        background-color: white;
+      }
+
+      nav, button, .controls, label, input, textarea, select, h1 {
+        display: none !important;
+      }
+
+      .container {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+      }
+
+      .page {
+        display: block;
+      }
+
+      #barcodeWrapper {
+        text-align: center;
+        page-break-before: avoid;
+      }
+
+      #barcode {
+        width: 80% !important;
+        height: auto !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <h1>바코드 생성기</h1>
-    <label for="barcodeData">바코드 데이터:</label>
-    <input type="text" id="barcodeData" placeholder="바코드 데이터를 입력하세요">
-    <br><br>
-    <label for="customText">내용:</label>
-    <input type="text" id="customText" placeholder="추가할 내용을 입력하세요">
-    <br><br>
-    <button onclick="generateBarcode()">바코드 생성</button>
+  <nav>
+    <a href="#" onclick="showPage('barcodePage')">바코드 생성기</a>
+    <a href="#" onclick="showPage('textPage')">글씨 인쇄</a>
+  </nav>
 
-    <div id="barcodeWrapper">
-        <!-- 바코드 위에 텍스트 -->
+  <div class="container">
+    <!-- 바코드 생성기 -->
+    <div id="barcodePage" class="page active">
+      <h1>바코드 생성기</h1>
+
+      <label for="barcodeData">바코드 데이터:</label>
+      <input type="text" id="barcodeData" placeholder="예: 182-RCRT1-1-11, PL0000000000" oninput="autoFillText(); generateBarcode();"/>
+
+      <label for="customText">내용:</label>
+      <input type="text" id="customText" placeholder="바코드 위에 표시될 텍스트"/>
+
+      <div style="text-align:center;">
+        <button onclick="generateBarcode()">바코드 생성</button>
+        <button onclick="window.print()">인쇄</button>
+      </div>
+
+      <div id="barcodeWrapper">
         <div id="customTextDisplay"></div>
-        
-        <!-- 바코드 이미지가 표시될 곳 -->
         <svg id="barcode"></svg>
-
-        <!-- 바코드 숫자 아래에 표시될 텍스트 -->
         <div id="barcodeNumber"></div>
+      </div>
     </div>
 
-    <!-- 인쇄 버튼 -->
-    <button id="printButton" onclick="printBarcode()">인쇄</button>
+    <!-- 글씨 인쇄기 -->
+    <div id="textPage" class="page">
+      <h1>글씨 인쇄</h1>
+      <label for="textInput">내용을 입력하세요:</label>
+      <textarea id="textInput" rows="5" placeholder="여기에 인쇄할 텍스트 입력"></textarea>
 
-    <script>
-        function generateBarcode() {
-            const data = document.getElementById("barcodeData").value.trim();  // 사용자 입력값 받기
+      <div class="controls">
+        <div class="control-group">
+          <label for="fontSize">글씨 크기</label>
+          <input type="range" min="12" max="48" value="24" id="fontSize" oninput="updateTextStyle()">
+        </div>
 
-            // 입력값이 비어있으면 경고 메시지
-            if (!data) {
-                alert("바코드 데이터를 입력해주세요.");
-                return;
-            }
+        <div class="control-group">
+          <label for="fontStyle">폰트 스타일</label>
+          <select id="fontStyle" onchange="updateTextStyle()">
+            <option value="Arial">Arial</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Courier New">Courier New</option>
+            <option value="Verdana">Verdana</option>
+          </select>
+        </div>
 
-            // 입력값에 특수문자나 공백이 포함되면 제거 (숫자와 알파벳만 허용)
-            const sanitizedData = data.replace(/[^A-Za-z0-9]/g, '');  // 알파벳과 숫자만 허용
+        <div class="control-group">
+          <label for="textAlign">정렬</label>
+          <select id="textAlign" onchange="updateTextStyle()">
+            <option value="left">왼쪽</option>
+            <option value="center">가운데</option>
+            <option value="right">오른쪽</option>
+          </select>
+        </div>
 
-            // 만약 특수문자나 공백을 모두 제거한 결과 값이 비어있으면
-            if (!sanitizedData) {
-                alert("바코드 데이터에는 알파벳과 숫자만 입력할 수 있습니다.");
-                return;
-            }
+        <div class="control-group">
+          <label for="lineHeight">줄간격</label>
+          <input type="range" min="1" max="3" step="0.1" value="1.5" id="lineHeight" oninput="updateTextStyle()">
+        </div>
+      </div>
 
-            console.log("바코드 생성 중:", sanitizedData);  // 디버깅용 로그
+      <div style="text-align:center;">
+        <button onclick="printText()">인쇄하기</button>
+      </div>
+    </div>
+  </div>
 
-            try {
-                // 바코드 생성 (Code128 형식 사용)
-                JsBarcode("#barcode", sanitizedData, {
-                    format: "CODE128",  // CODE128 바코드 형식 사용
-                    width: 2,           // 바코드 선의 두께
-                    height: 100,        // 바코드의 높이
-                    displayValue: true,  // 바코드 숫자 아래에 값 표시
-                });
+  <script>
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
 
-                // 바코드 숫자 아래에 표시할 숫자 값 업데이트
-                const barcodeNumber = document.getElementById("barcodeNumber");
-                barcodeNumber.textContent = sanitizedData;
+    function autoFillText() {
+      const data = document.getElementById("barcodeData").value.trim();
+      if (data.includes("182-RCRT1")) {
+        document.getElementById("customText").value = "토트 바코드";
+      }
+    }
 
-                // 사용자 입력 내용 (추가 텍스트)
-                const customText = document.getElementById("customText").value.trim();
-                const customTextDisplay = document.getElementById("customTextDisplay");
-                if (customText) {
-                    customTextDisplay.textContent = customText; // 바코드 위 텍스트 추가
-                }
+    function generateBarcode() {
+      const data = document.getElementById("barcodeData").value.trim();
+      const customText = document.getElementById("customText").value.trim();
+      if (!data) {
+        alert("바코드 데이터를 입력하세요.");
+        return;
+      }
 
-                // 인쇄 버튼 표시
-                document.getElementById("printButton").style.display = "inline-block"; 
+      JsBarcode("#barcode", data, {
+        format: "CODE128",
+        width: 3,
+        height: 100,
+        displayValue: true,
+        fontSize: 20
+      });
 
-            } catch (error) {
-                // 오류 처리
-                console.error("바코드 생성 중 오류 발생:", error);
-                alert("바코드 생성에 실패했습니다. 입력값을 확인해주세요.");
-            }
-        }
+      document.getElementById("customTextDisplay").textContent = customText;
+      document.getElementById("barcodeNumber").textContent = data;
+    }
 
-        // 인쇄 함수
-        function printBarcode() {
-            window.print();
-        }
-    </script>
+    function updateTextStyle() {
+      const fontSize = document.getElementById("fontSize").value + "px";
+      const fontFamily = document.getElementById("fontStyle").value;
+      const textAlign = document.getElementById("textAlign").value;
+      const lineHeight = document.getElementById("lineHeight").value;
 
+      const textarea = document.getElementById("textInput");
+      textarea.style.fontSize = fontSize;
+      textarea.style.fontFamily = fontFamily;
+      textarea.style.textAlign = textAlign;
+      textarea.style.lineHeight = lineHeight;
+    }
+
+    function printText() {
+      const text = document.getElementById("textInput").value;
+      const style = window.getComputedStyle(document.getElementById("textInput"));
+
+      const win = window.open('', '', 'width=600,height=600');
+      win.document.write('<html><head><title>인쇄</title></head><body>');
+      win.document.write(`<div style="
+        font-size: ${style.fontSize};
+        font-family: ${style.fontFamily};
+        text-align: ${style.textAlign};
+        line-height: ${style.lineHeight};
+      ">${text.replace(/\n/g, "<br>")}</div>`);
+      win.document.write('</body></html>');
+      win.document.close();
+      win.print();
+    }
+  </script>
 </body>
 </html>

@@ -1,67 +1,37 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+@media print {
+  body, html {
     margin: 0;
-}
-
-.container {
-    text-align: center;
+    padding: 0;
     background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    width: 300px;
-}
+  }
 
-input[type="text"] {
-    padding: 10px;
-    width: 100%;
-    margin-bottom: 20px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
+  nav, .content > *:not(#barcodeWrapper) {
+    display: none !important;
+  }
 
-button {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 10px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#barcodeContainer {
+  #barcodeWrapper {
     display: block;
-    margin-top: 20px;
     text-align: center;
-}
+    margin: 0 auto;
+    padding-top: 100px;
+  }
 
-#barcode {
-    width: 100%;
-    height: 100px;
-}
-
-#barcodeNumber {
-    margin-top: 10px;
+  #customTextDisplay,
+  #barcodeNumber {
+    display: block !important;
     font-size: 20px;
-    color: #333;
     font-weight: bold;
-    display: block;
-    text-align: center;
-}
+    margin: 20px 0;
+    color: black;
+  }
 
-div > label {
-    display: block;
-    margin-bottom: 10px;
+  #printableBarcodeCanvas {
+    display: block !important;
+    margin: 0 auto;
+  }
+
+  /* SVG 바코드 감춤 (웹용만 사용) */
+  #barcode {
+    display: none !important;
+  }
 }
